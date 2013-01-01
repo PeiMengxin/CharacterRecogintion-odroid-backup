@@ -63,8 +63,17 @@ std::vector<std::string> state_str;
 void drawImage(cv::Mat &image)
 {
 	char temp_text[50];
+	int char_to_recognition = 0;
+	if (flag_LX_target)
+	{
+		char_to_recognition = target_num;
+	}
+	else
+	{
+		char_to_recognition = char_num;
+	}
 	static Point pt_src_center(image.cols / 2, image.rows / 2);
-	sprintf(temp_text, "target=%d", target_num);
+	sprintf(temp_text, "target=%d", char_to_recognition);
 	putText(image, temp_text, Point(10, 60), FONT_HERSHEY_SIMPLEX, 0.6,
 			CV_RGB(255, 0, 0), 2);
 	sprintf(temp_text, "Pit=%.2f", Pitch);
@@ -77,15 +86,16 @@ void drawImage(cv::Mat &image)
 	putText(image, temp_text, Point(10, 120), FONT_HERSHEY_SIMPLEX, 0.6,
 			CV_RGB(255, 0, 0), 2);
 	sprintf(temp_text, "  %d", state_num);
-	putText(image, state_str[state_num]+temp_text, Point(160, 20),
+	putText(image, state_str[state_num] + temp_text, Point(160, 20),
 	CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(255, 0, 0), 1, 8);
 
 	putText(image, number_position_send.number_, Point(10, 140),
-		CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(255, 0, 0), 1, 8);
+	CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(255, 0, 0), 1, 8);
 
-	sprintf(temp_text, "pt=%d %d", number_position_send.position_.x,number_position_send.position_.y);
-		putText(image, temp_text, Point(10, 160), FONT_HERSHEY_SIMPLEX, 0.6,
-				CV_RGB(255, 0, 0), 2);
+	sprintf(temp_text, "pt=%d %d", number_position_send.position_.x,
+			number_position_send.position_.y);
+	putText(image, temp_text, Point(10, 160), FONT_HERSHEY_SIMPLEX, 0.6,
+			CV_RGB(255, 0, 0), 2);
 
 	cv::line(image, pt_src_center - Point(10, 0), pt_src_center + Point(10, 0),
 			CV_RGB(0, 255, 0), 2);
@@ -102,6 +112,8 @@ void init()
 	state_str[3] = SU_HOLD;
 	state_str[4] = SD_RETRY_UP;
 	state_str[5] = SD_RETRY_UP_HOLD;
+	state_str[6] = SD_CHECK_TARGET;
+	state_str[7] = SD_FLY_TARGET;
 
 	state_str[13] = SD_HOLD;
 	state_str[14] = SD_MISS_SEARCH;

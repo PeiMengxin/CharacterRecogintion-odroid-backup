@@ -37,6 +37,8 @@ int target_num = -1;
 int state_num = 0;
 bool isTerminal = false;
 int delay_ms = 5;
+int flag_LX_target = 0;
+bool have_target = false;
 
 NumberPosition number_position_send;
 
@@ -75,6 +77,7 @@ int main()
 	cv::VideoWriter video_writer_src;
 
 	cv::createTrackbar("character", "bar", &char_num, 9);
+	cv::createTrackbar("LX_target", "bar", &flag_LX_target, 1);
 	cv::createTrackbar("psr_threshold", "bar", &psr_threshold, 60);
 	cv::createTrackbar("writevideo", "bar", &flag_writevideo, 1);
 	cv::createTrackbar("writevideo_src", "bar", &flag_writevideo_src, 1);
@@ -165,14 +168,14 @@ int main()
 	char temp_text[50];
 	char character_temp = 0;
 	Point pt_src_center(src.cols / 2, src.rows / 2);
+	int check_count = 0;
+	char check_character = 0;
 
 	while (true)
 	{
 		frame++;
 		log_out << "frame: " << frame << endl;
 
-		//tm.reset();
-		//tm.start();
 #if USE_CAMERA
 		cap >> src_temp;
 		warpFfine(src_temp, src, 180);
@@ -194,79 +197,122 @@ int main()
 
 		if (src.data == NULL)
 		{
-			break;
+			cout << "src.data = NULL...try again..." << endl;
+			continue;
 		}
 
-		if (start_track)
+		if (flag_LX_target == 1)
 		{
-			tracker_psr = tracker.update(dlib_img) * 2;
-			static int cnt_loss_track = 0, cnt_loss_track5 = 0;
-			if (tracker_psr < 12)
-				cnt_loss_track++;
-			if (tracker_psr < 7)
-				cnt_loss_track5++;
-			if (cnt_loss_track > 20 || cnt_loss_track5 > 2)
+			if (state_str[state_num] == SD_FLY_TARGET)
 			{
-				cnt_loss_track = 0;
-				cnt_loss_track5 = 0;
-				start_track = false;
+				check_count = 0;
+				have_target = false;
+				target_num = -1;
+				//continue;
 			}
 
-			if (tracker_psr < psr_threshold || frame % 50 == 0)
+			if (state_str[state_num] == SD_CHECK_TARGET)
 			{
-				start_track = false;
-			}
+				detectNumber(src, tess, result);
+				if (result.size() == 1)
+				{
+					if (check_character == result[0].number_[0])
+					{
+						check_count++;
+					}
+					else
+					{
+						check_count = 0;
+					}
 
-			dlib::rectangle rect = tracker.get_position();
-			Rect rect_temp = dlibRect2CVRect(tracker.get_position());
-			number_position_send.position_ = Point(
-					rect_temp.x + rect_temp.width / 2,
-					rect_temp.y + rect_temp.height / 2);
-			cv::rectangle(src, dlibRect2CVRect(tracker.get_position()),
-					CV_RGB(255, 0, 0), 2, 8, 0);
-			putText(src, number_position_send.number_,
-					number_position_send.position_, FONT_HERSHEY_SIMPLEX, 1,
-					CV_RGB(255, 0, 0), 2);
-			sprintf(temp_text, "psr=%d", int(tracker_psr));
-			putText(src, temp_text, Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.6,
-					CV_RGB(255, 0, 0), 2);
-			cv::circle(src,
-					Point(rect.bl_corner().x() + rect.width() / 2,
-							rect.bl_corner().y() - rect.height() / 2), 2,
-					CV_RGB(255, 0, 0), 2, 8, 0);
+					check_character = result[0].number_[0];
+				}
+				if (check_count >= 10)
+				{
+					have_target = true;
+					target_num = check_character - 48;
+				}
+
+				uartSent(UART_SENT_TYPE_TARGET);
+
+				//continue;
+			}
+			else
+			{
+				check_count = 0;
+			}
 		}
+
+		if (have_target || flag_LX_target == 0)
+		{
+			if (start_track)
+			{
+				tracker_psr = tracker.update(dlib_img) * 2;
+				static int cnt_loss_track = 0, cnt_loss_track5 = 0;
+				if (tracker_psr < 12)
+					cnt_loss_track++;
+				if (tracker_psr < 7)
+					cnt_loss_track5++;
+				if (cnt_loss_track > 20 || cnt_loss_track5 > 2)
+				{
+					cnt_loss_track = 0;
+					cnt_loss_track5 = 0;
+					start_track = false;
+				}
+
+				if (tracker_psr < psr_threshold || frame % 50 == 0)
+				{
+					start_track = false;
+				}
+
+				dlib::rectangle rect = tracker.get_position();
+				Rect rect_temp = dlibRect2CVRect(tracker.get_position());
+				number_position_send.position_ = Point(
+						rect_temp.x + rect_temp.width / 2,
+						rect_temp.y + rect_temp.height / 2);
+				cv::rectangle(src, dlibRect2CVRect(tracker.get_position()),
+						CV_RGB(255, 0, 0), 2, 8, 0);
+				putText(src, number_position_send.number_,
+						number_position_send.position_, FONT_HERSHEY_SIMPLEX, 1,
+						CV_RGB(255, 0, 0), 2);
+				sprintf(temp_text, "psr=%d", int(tracker_psr));
+				putText(src, temp_text, Point(10, 20), FONT_HERSHEY_SIMPLEX,
+						0.6, CV_RGB(255, 0, 0), 2);
+				cv::circle(src,
+						Point(rect.bl_corner().x() + rect.width() / 2,
+								rect.bl_corner().y() - rect.height() / 2), 2,
+						CV_RGB(255, 0, 0), 2, 8, 0);
+			}
+			else
+			{
+				number_position_send.init();
+				detectNumber(src, tess, result);
+
+				for (size_t i = 0; i < result.size(); i++)
+				{
+					if (result[i].number_[0] == char_num + 48)
+					{
+						number_position_send.number_ = result[i].number_;
+						number_position_send.position_ = result[i].position_;
+						number_position_send.boundRect = result[i].boundRect;
+
+						tracker.start_track(dlib_img,
+								getInitPosition(
+										number_position_send.boundRect));
+						start_track = true;
+					}
+					putText(src, result[i].number_, result[i].position_,
+							FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 0, 0), 2);
+				}
+			}
+		}
+
 		else
 		{
 			number_position_send.init();
-			detectNumber(src, tess, result);
-
-			for (size_t i = 0; i < result.size(); i++)
-			{
-				if (result[i].number_[0] == char_num + 48)
-				{
-					number_position_send.number_ = result[i].number_;
-					number_position_send.position_ = result[i].position_;
-					number_position_send.boundRect = result[i].boundRect;
-
-					tracker.start_track(dlib_img,
-							getInitPosition(number_position_send.boundRect));
-					start_track = true;
-				}
-				putText(src, result[i].number_, result[i].position_,
-						FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 0, 0), 2);
-			}
-
-//			if (result.size() > 0)
-//			{
-//				if (character_temp == number_position_send.number_[0])
-//				{
-//					tracker.start_track(dlib_img,
-//							getInitPosition(number_position_send.boundRect));
-//					start_track = true;
-//				}
-//				character_temp = number_position_send.number_[0];
-//			}
+			start_track = false;
 		}
+
 		if (number_position_send.position_.x >= 0)
 		{
 			sprintf(temp_text, "position=%d,%d",
@@ -280,27 +326,6 @@ int main()
 
 		uartSent(UART_SENT_TYPE_CHARACTER);
 		uartSent(UART_SENT_TYPE_MOUSE);
-
-//		for (size_t i = 0; i < number_position_send.size(); i++)
-//		{
-//			/**
-//			 * Check the character to print
-//			 *
-//			 * TODO
-//			 */
-//
-//			uart_send();
-//
-//			cout << "number: " << number_position_send[i].number_ << endl;
-//			cout << "position: " << number_position_send[i].position_ << endl;
-//			cout << "uart_good: " << uart_good << endl;
-//			log_out << "number: " << number_position_send[i].number_ << " ";
-//			log_out << "position: " << number_position_send[i].position_ << endl;
-//		}
-
-//		tm.stop();
-//		cout << tm.getTimeMilli() << "ms" << endl;
-//		cout <<endl;
 
 		imshow("cap", src);
 

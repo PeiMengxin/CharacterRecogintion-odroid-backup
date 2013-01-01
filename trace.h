@@ -35,5 +35,8 @@ extern int char_num;
 extern bool LBtnDown;
 extern serial::Serial my_serial;
 extern std::ifstream video_num_read;
+extern int flag_LX_target;
+extern bool have_target;
+extern std::vector<std::string> state_str;
 
 #endif /* TRACE_H_ */

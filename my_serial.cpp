@@ -110,6 +110,13 @@ void uartSent(int _type)
 		Data_pre_character();
 		break;
 	}
+	case UART_SENT_TYPE_TARGET:
+		{
+			Data_pre_target();
+			break;
+		}
+
+
 	default:
 		break;
 	}
@@ -120,6 +127,7 @@ void uartSent(int _type)
 void Data_pre_character()
 {
 	int _cnt = 0, i = 0, sum = 0;
+	int char_to_recognition = 0;
 	unsigned int _temp;
 	data_to_send[_cnt++] = 0xAA;
 	data_to_send[_cnt++] = 0xAF;
@@ -135,7 +143,16 @@ void Data_pre_character()
 //			data_to_send[_cnt++] = int(number_position_send[i].position_.y);
 //		}
 
-	if (number_position_send.number_[0] != char_num + 48)
+	if(flag_LX_target)
+	{
+		char_to_recognition = target_num;
+	}
+	else
+	{
+		char_to_recognition = char_num;
+	}
+
+	if (number_position_send.number_[0] != char_to_recognition + 48)
 	{
 		data_to_send[_cnt++] = 0;
 	}
@@ -168,6 +185,26 @@ void Data_pre_mouse(int x, int y)
 	data_to_send[_cnt++] = int(x) / 255;
 	data_to_send[_cnt++] = int(x) % 255;
 	data_to_send[_cnt++] = y;
+
+	data_to_send[3] = _cnt - 4;
+
+	for (i = 0; i < _cnt; i++)
+		sum += data_to_send[i];
+	data_to_send[_cnt++] = sum;
+	Length = _cnt;
+}
+
+void Data_pre_target()
+{
+	int _cnt = 0, i = 0, sum = 0;
+	unsigned int _temp;
+	data_to_send[_cnt++] = 0xAA;
+	data_to_send[_cnt++] = 0xAF;
+	data_to_send[_cnt++] = 0x05;    //���������������������������
+	data_to_send[_cnt++] = 0;    //���������������������������
+
+	data_to_send[_cnt++] = int(have_target);
+	data_to_send[_cnt++] = target_num;
 
 	data_to_send[3] = _cnt - 4;
 

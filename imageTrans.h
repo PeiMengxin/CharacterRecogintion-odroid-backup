@@ -23,6 +23,8 @@
 #define SU_HOLD				"U_HOLD"	//3
 #define SD_RETRY_UP			"R_UP"	//4
 #define SD_RETRY_UP_HOLD	"R_HOLD"	//5
+#define SD_CHECK_TARGET		"CHECK_TARGET"	//6
+#define SD_FLY_TARGET		"FLY_TARGET"	//7
 
 #define SD_HOLD				"D_HOLD"	//13
 #define SD_MISS_SEARCH		"D_MISS"	//14
