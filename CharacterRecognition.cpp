@@ -442,13 +442,13 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess, std::vector<NumberP
 	//Mat drawing = Mat::zeros(img_threshold.size(), CV_8UC3);
 	//RNG rng(12345);
 
-	for (size_t i = 0; i < PolyCanditates.size(); i++)
-	{
-		//Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-		//drawContours(drawing, PolyCanditates, i, color, 2, 8, vector<Vec4i>(), 0, Point());
-		drawContours(src, PolyCanditates, i, CV_RGB(255,0,0), 2, 8, vector<Vec4i>(), 0, Point());
-		//rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
-	}
+//	for (size_t i = 0; i < PolyCanditates.size(); i++)
+//	{
+//		//Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+//		//drawContours(drawing, PolyCanditates, i, color, 2, 8, vector<Vec4i>(), 0, Point());
+//		drawContours(src, PolyCanditates, i, CV_RGB(255,0,0), 2, 8, vector<Vec4i>(), 0, Point());
+//		//rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+//	}
 
 	//imshow("Contours", drawing);
 
@@ -467,18 +467,38 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess, std::vector<NumberP
 
 	//è·åèªå®ä¹æ ¸
 	Mat element = getStructuringElement(MORPH_RECT,
-										Size(2 * g_nStructElementSize + 1, 2 * g_nStructElementSize + 1),
-										Point(g_nStructElementSize, g_nStructElementSize));
+										Size(2 * g_nStructElementSize + 1, 7 * g_nStructElementSize + 1),
+										Point(g_nStructElementSize, 3*g_nStructElementSize));
 	for (size_t i = 0; i < characterImgV.size(); i++)
 	{
 		Mat img_character = characterImgV[i].img_.clone();
+
+		bool backgroundWhite = true;
+
+		int nonZeroNum = countNonZero(img_character);
+		if (nonZeroNum < img_character.total()/2)
+		{
+			backgroundWhite = false;
+		}
+
 		Mat tempgray;
 
-		morphologyEx(img_character, img_character, MORPH_OPEN, element, Point(-1, -1), 3);
+		if (backgroundWhite)
+		{
+			cv::erode(img_character, img_character, element, Point(-1, -1), 1);
+			img_character.setTo(255, mask);
+		}
+		else
+		{
+			dilate(img_character, img_character, element, Point(-1, -1), 1);
+			img_character.setTo(0, mask);
+		}
+
+		//morphologyEx(img_character, img_character, MORPH_OPEN, element, Point(-1, -1), 3);
 		//dilate(img_character, img_character, element, Point(-1, -1), 3);
 		//cv::erode(img_character, img_character, element, Point(-1, -1), 3);
 
-		img_character.setTo(255, mask);
+		//img_character.setTo(255, mask);
 		//imshow("img_character",img_character);
 
 		tess.SetImage(img_character.data, img_character.cols, img_character.rows, 1, img_character.cols);
