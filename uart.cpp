@@ -337,6 +337,14 @@ void read_uart(void) {
 			if ((1)) // ��������������������������������������������������������
 			{
 				state_v = buff[0];
+//				if(state_v>50)
+//				{
+//					state_v -= 50;
+//				}
+//				else
+//				{
+//					target_num = state_v;
+//				}
 				FD_ZERO(&rfds);
 				FD_SET(fd, &rfds);
 				retval = select(fd + 1, &rfds, NULL, NULL, &tv);

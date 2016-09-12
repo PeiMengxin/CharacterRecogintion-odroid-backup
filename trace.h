@@ -24,6 +24,7 @@
 
 extern int circle_check,circles_x,circles_y,circles_r,track_check,state_v;
 extern unsigned char circle_control[4];
+extern int target_num, state_num;
 
 extern std::vector<NumberPosition> number_position_send;
 extern bool is_print_character;

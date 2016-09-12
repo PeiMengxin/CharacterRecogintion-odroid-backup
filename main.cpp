@@ -1,5 +1,6 @@
 #include "CharacterRecognition.h"
 #include <fstream>
+#include <sstream>
 #include <thread>
 #include "trace.h"
 #include "uart.h"
@@ -101,7 +102,7 @@ string  get_time()
 
 }
 
-int char_num = 6;
+int char_num = 5;
 
 static cv::Mat depth, depth_show, point_cloud;
 static DepthRender render;
@@ -142,37 +143,75 @@ int initPercipio()
 		  return 0;
 }
 
+std::string video_num_path("/home/odroid/workspace/characterRecognition/video/video_num.txt");
+
+int video_num = 0;
+std::ifstream video_num_read;
+std::ofstream video_num_write;
+
+void startWriteVideo(std::ifstream &video_num_read, cv::VideoWriter &video_writer)
+{
+	video_num_read.open(video_num_path.c_str());
+	video_num_read >> video_num;
+	video_num_read.close();
+
+	cout << video_num << endl;
+
+	video_num_write.open(video_num_path.c_str());
+	video_num_write << (video_num + 1);
+	video_num_write.close();
+
+	if (video_writer.isOpened())
+	{
+		video_writer.release();
+	}
+
+	std::stringstream ss;
+	string video_name;
+
+	ss << video_num;
+	ss >> video_name;
+	video_name += ".avi";
+
+	video_writer.open("/home/odroid/workspace/characterRecognition/video/"+video_name,
+			CV_FOURCC('D', 'I', 'V', 'X'), 15,Size(320, 240));
+
+}
+
+int target_num = -1;
+int state_num = 0;
+
 int main()
 {
-	percipio::DepthCameraDevice port(percipio::MODEL_DPB04GN);
-		  render.range_mode = DepthRender::COLOR_RANGE_DYNAMIC;
-		  render.color_type = DepthRender::COLORTYPE_BLUERED;
-		  render.invalid_label = 0;
-		  render.Init();
-		  percipio::SetLogLevel(percipio::LOG_LEVEL_INFO);
-		  port.SetCallbackUserData(NULL);
-		  port.SetFrameReadyCallback(frame_arrived_callback);
-
-		  int ver = percipio::LibVersion();
-		  printf("Sdk version is %d\n", ver);
-
-		  int ret = port.OpenDevice();
-		  if (percipio::CAMSTATUS_SUCCESS != ret) {
-		    printf("open device failed\n");
-		    return -1;
-		  }
-
-	int wait_time;
-	  port.GetProperty(percipio::PROP_WAIT_NEXTFRAME_TIMEOUT, (char *)&wait_time, sizeof(int));
-	  printf("get property PROP_WAIT_NEXTFRAME_TIMEOUT %d\n", wait_time);
-
-	  int reti = port.SetProperty_Int(percipio::PROP_WORKMODE, percipio::WORKMODE_DEPTH);
-	  //int reti = port.SetProperty_Int(percipio::PROP_WORKMODE, percipio::WORKMODE_IR);
-	  //int reti = port.SetProperty_Int(percipio::PROP_WORKMODE, percipio::WORKMODE_IR_DEPTH);
-	  if (reti < 0) {
-	    printf("set mode failed,error code:%d\n", reti);
-	    return -1;
-	  }
+//	percipio::DepthCameraDevice port(percipio::MODEL_DPB04GN);
+//		  render.range_mode = DepthRender::COLOR_RANGE_DYNAMIC;
+//		  render.color_type = DepthRender::COLORTYPE_BLUERED;
+//		  render.invalid_label = 0;
+//		  render.Init();
+//		  percipio::SetLogLevel(percipio::LOG_LEVEL_INFO);
+//		  port.SetCallbackUserData(NULL);
+//		  port.SetFrameReadyCallback(frame_arrived_callback);
+//
+//		  int ver = percipio::LibVersion();
+//		  printf("Sdk version is %d\n", ver);
+//
+//		  int ret = port.OpenDevice();
+//		  if (percipio::CAMSTATUS_SUCCESS != ret) {
+//		    printf("open device failed\n");
+//		    return -1;
+//		  }
+//
+//	int wait_time;
+//	  port.GetProperty(percipio::PROP_WAIT_NEXTFRAME_TIMEOUT, (char *)&wait_time, sizeof(int));
+//	  printf("get property PROP_WAIT_NEXTFRAME_TIMEOUT %d\n", wait_time);
+//
+//	  int reti = port.SetProperty_Int(percipio::PROP_WORKMODE, percipio::WORKMODE_DEPTH);
+//	  //int reti = port.SetProperty_Int(percipio::PROP_WORKMODE, percipio::WORKMODE_IR);
+//	  //int reti = port.SetProperty_Int(percipio::PROP_WORKMODE, percipio::WORKMODE_IR_DEPTH);
+//	  if (reti < 0) {
+//	    printf("set mode failed,error code:%d\n", reti);
+//	    return -1;
+//	  }
 
 	string imagename("NumberBlock-2.bmp");
 
@@ -187,7 +226,7 @@ int main()
 	ofstream log_out;
 	log_out.open("log.txt");
 
-    string videoName("NumberBlock_video1.avi");
+    string videoName("/home/odroid/workspace/characterRecognition/video/src2.avi");
 
     dlib::correlation_tracker tracker;
 
@@ -229,7 +268,7 @@ int main()
 		state_str[21] = SD_SHUT_DOWN;
 		state_str[22] = SD_SAFE;
 
-#define USE_CAMERA 1
+#define USE_CAMERA 0
 
 #if USE_CAMERA
     cap.open(0);
@@ -258,9 +297,9 @@ int main()
 
     while (true)
     {
-    	if (port.FramePackageGet() == percipio::CAMSTATUS_SUCCESS) {
-    	      process_frames(port);
-    	    }
+//    	if (port.FramePackageGet() == percipio::CAMSTATUS_SUCCESS) {
+//    	      process_frames(port);
+//    	    }
 
         cap >> src_temp;
         warpFfine(src_temp, src, 180);
@@ -319,19 +358,22 @@ int main()
 
 	while (true)
 	{
-		if (port.FramePackageGet() == percipio::CAMSTATUS_SUCCESS) {
-		    	      process_frames(port);
-		    	    }
+//		if (port.FramePackageGet() == percipio::CAMSTATUS_SUCCESS) {
+//		    	      process_frames(port);
+//		    	    }
 
 		frame++;
 		log_out << "frame: " << frame << endl;
 
 		//tm.reset();
 		//tm.start();
-
+#if USE_CAMERA
 		cap >> src_temp;
 		warpFfine(src_temp, src, 180);
 		src.copyTo(src_save);
+#else
+		cap >> src;
+#endif
 
 		if(LBtnDown)
 		{
@@ -399,8 +441,23 @@ int main()
 					CV_RGB(255, 0, 0), 2);
 		}
 
-		putText(src, state_str[state_v], Point(160, 20),
-					CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(255, 0, 0), 1, 8);
+		if(state_v >= 50)
+		{
+			state_num=state_v-50;
+		}
+		else
+		{
+			target_num = state_v;
+		}
+
+		sprintf(temp_text, "target=%d",target_num);
+		putText(src, temp_text, Point(10, 60), FONT_HERSHEY_SIMPLEX, 0.6,
+								CV_RGB(255, 0, 0), 2);
+
+		putText(src, state_str[state_num], Point(160, 20),
+				CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(255, 0, 0), 1, 8);
+
+
 		cv::line(src, pt_src_center-Point(10,0),pt_src_center+Point(10,0),CV_RGB(0,255,0),2);
 		cv::line(src, pt_src_center-Point(0,10),pt_src_center+Point(0,10),CV_RGB(0,255,0),2);
 
@@ -449,9 +506,7 @@ int main()
 		{
 			if(flag_writevideo == 1)
 			{
-				time = get_time();
-				video_writer.open("/home/odroid/workspace/characterRecognition/video/"+time+".avi", CV_FOURCC('D', 'I', 'V', 'X'), 15,
-			Size(320, 240));
+				startWriteVideo(video_num_read, video_writer);
 				flag_writing = 1;
 			}
 		}
@@ -469,9 +524,7 @@ int main()
 				{
 					if(flag_writevideo_src == 1)
 					{
-						time = get_time();
-						video_writer_src.open("/home/odroid/workspace/characterRecognition/video/"+time+".avi", CV_FOURCC('D', 'I', 'V', 'X'), 15,
-					Size(320, 240));
+						startWriteVideo(video_num_read, video_writer_src);
 						flag_writing_src = 1;
 					}
 				}
@@ -490,8 +543,12 @@ int main()
 	{
 		video_writer.release();
 	}
+	if(video_writer_src.isOpened())
+	{
+		video_writer_src.release();
+	}
 
-	 port.CloseDevice();
+	 //port.CloseDevice();
 
 	  depth.release();
 	  point_cloud.release();
