@@ -73,6 +73,8 @@ public:
 	cv::Point position_;
 	cv::Rect boundRect;
 
+	void init();
+
 private:
 
 };
