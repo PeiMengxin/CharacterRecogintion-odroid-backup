@@ -243,7 +243,7 @@ int main()
 			}
 		}
 
-		if (have_target || flag_LX_target == 0)
+		if ((have_target || flag_LX_target == 0) && (state_str[state_num] != SD_CHECK_TARGET))
 		{
 			if (start_track)
 			{
