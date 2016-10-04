@@ -184,8 +184,8 @@ void Data_pre_target()
 	unsigned int _temp;
 	data_to_send[_cnt++] = 0xAA;
 	data_to_send[_cnt++] = 0xAF;
-	data_to_send[_cnt++] = 0x05;    //���������������������������
-	data_to_send[_cnt++] = 0;    //���������������������������
+	data_to_send[_cnt++] = 0x05;
+	data_to_send[_cnt++] = 0;
 
 	data_to_send[_cnt++] = int(have_target);
 	data_to_send[_cnt++] = target_num;
