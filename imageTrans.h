@@ -17,28 +17,28 @@
 #include <dlib/opencv.h>
 
 //state
-#define SG_LOW_CHECK		"G_LC"	//0
-#define SG_MID_CHECK		"G_MC"	//1
-#define SU_UP1				"U_UP1"	//2
-#define SU_HOLD				"U_HOLD"	//3
-#define SD_RETRY_UP			"R_UP"	//4
-#define SD_RETRY_UP_HOLD	"R_HOLD"	//5
-#define SD_CHECK_TARGET		"CHECK_TARGET"	//6
-#define SD_FLY_TARGET		"FLY_TARGET"	//7
+#define SG_LOW_CHECK		0	//"G_LC"
+#define SG_MID_CHECK		1	//"G_MC"
+#define SU_UP1				2	//"U_UP1"
+#define SU_HOLD				3	//"U_HOLD"
+#define SD_RETRY_UP			4	//"R_UP"
+#define SD_RETRY_UP_HOLD	5	//"R_HOLD"
+#define SD_CHECK_TARGET		6	//"CHECK_TARGET"
+#define SD_FLY_TARGET		7	//"FLY_TARGET"
 
-#define SD_HOLD				"D_HOLD"	//13
-#define SD_MISS_SEARCH		"D_MISS"	//14
-#define SD_HOLD2			"D_HOLD2"	//15
-#define SD_HIGH_FAST_DOWN	"D_FastD"	//16
-#define SD_CIRCLE_SLOW_DOWN	"D_CSD"	//17
-#define SD_CIRCLE_HOLD		"D_CHOLD"	//18
-#define SD_CIRCLE_MID_DOWN	"D_CMD"	//19
-#define SD_CHECK_G			"D_GC"	//20
-#define SD_SHUT_DOWN		"D_SHUT"	//21
-#define SD_SAFE				"D_SAFE"	//22
-#define HOLD_BACK			"HOLD_BACK"	//23
-#define BREAK				"BREAK"	//24
-#define SHUT				"SHUT"	//25
+#define SD_HOLD				13	//"D_HOLD"
+#define SD_MISS_SEARCH		14	//"D_MISS"
+#define SD_HOLD2			15	//"D_HOLD2"
+#define SD_HIGH_FAST_DOWN	16	//"D_FastD"
+#define SD_CIRCLE_SLOW_DOWN	17	//"D_CSD"
+#define SD_CIRCLE_HOLD		18	//"D_CHOLD"
+#define SD_CIRCLE_MID_DOWN	19	//"D_CMD"
+#define SD_CHECK_G			20	//"D_GC"
+#define SD_SHUT_DOWN		21	//"D_SHUT"
+#define SD_SAFE				22	//"D_SAFE"
+#define HOLD_BACK			23	//"HOLD_BACK"
+#define BREAK				24	//"BREAK"
+#define SHUT				25	//"SHUT"
 
 cv::Rect dlibRect2CVRect(dlib::rectangle r);
 dlib::rectangle getInitPosition(cv::Rect r);

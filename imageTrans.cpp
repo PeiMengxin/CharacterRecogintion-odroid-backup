@@ -64,16 +64,9 @@ void drawImage(cv::Mat &image)
 {
 	char temp_text[50];
 	int char_to_recognition = 0;
-	if (flag_LX_target)
-	{
-		char_to_recognition = target_num;
-	}
-	else
-	{
-		char_to_recognition = char_num;
-	}
+	
 	static Point pt_src_center(image.cols / 2, image.rows / 2);
-	sprintf(temp_text, "target=%d", char_to_recognition);
+	sprintf(temp_text, "target=%d", target_num);
 	putText(image, temp_text, Point(10, 60), FONT_HERSHEY_SIMPLEX, 0.6,
 			CV_RGB(255, 0, 0), 2);
 	sprintf(temp_text, "Pit=%.2f", Pitch);
@@ -106,28 +99,28 @@ void drawImage(cv::Mat &image)
 void init()
 {
 	state_str.resize(30, "none");
-	state_str[0] = SG_LOW_CHECK;
-	state_str[1] = SG_MID_CHECK;
-	state_str[2] = SU_UP1;
-	state_str[3] = SU_HOLD;
-	state_str[4] = SD_RETRY_UP;
-	state_str[5] = SD_RETRY_UP_HOLD;
-	state_str[6] = SD_CHECK_TARGET;
-	state_str[7] = SD_FLY_TARGET;
+	state_str[SG_LOW_CHECK0] 		= 	"G_LC";
+	state_str[SG_MID_CHECK1]		=	"G_MC";
+	state_str[SU_UP1] 				= 	"U_UP1";
+	state_str[SU_HOLD] 				= 	"U_HOLD";
+	state_str[SD_RETRY_UP] 			= 	"R_UP";
+	state_str[SD_RETRY_UP_HOLD] 	= 	"R_HOLD";
+	state_str[SD_CHECK_TARGET] 		= 	"CHECK_TARGET";
+	state_str[SD_FLY_TARGET] 		= 	"FLY_TARGET";
 
-	state_str[13] = SD_HOLD;
-	state_str[14] = SD_MISS_SEARCH;
-	state_str[15] = SD_HOLD2;
-	state_str[16] = SD_HIGH_FAST_DOWN;
-	state_str[17] = SD_CIRCLE_SLOW_DOWN;
-	state_str[18] = SD_CIRCLE_HOLD;
-	state_str[19] = SD_CIRCLE_MID_DOWN;
-	state_str[20] = SD_CHECK_G;
-	state_str[21] = SD_SHUT_DOWN;
-	state_str[22] = SD_SAFE;
-	state_str[23] = HOLD_BACK;
-	state_str[24] = BREAK;
-	state_str[25] = SHUT;
+	state_str[SD_HOLD] 				= 	"D_HOLD";
+	state_str[SD_MISS_SEARCH] 		= 	"D_MISS";
+	state_str[SD_HOLD2] 			= 	"D_HOLD2";
+	state_str[SD_HIGH_FAST_DOWN] 	= 	"D_FastD";
+	state_str[SD_CIRCLE_SLOW_DOWN] 	= 	"D_CSD";
+	state_str[SD_CIRCLE_HOLD] 		= 	"D_CHOLD";
+	state_str[SD_CIRCLE_MID_DOWN] 	= 	"D_CMD";
+	state_str[SD_CHECK_G] 			= 	"D_GC";
+	state_str[SD_SHUT_DOWN] 		= 	"D_SHUT";
+	state_str[SD_SAFE] 				= 	"D_SAFE";
+	state_str[HOLD_BACK] 			= 	"HOLD_BACK";
+	state_str[BREAK] 				= 	"BREAK";
+	state_str[SHUT] 				= 	"SHUT";
 }
 
 int video_num = 0;

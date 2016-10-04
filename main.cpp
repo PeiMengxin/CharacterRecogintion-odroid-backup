@@ -12,8 +12,6 @@ bool LBtnDown = false;
 
 void onMouse(int event, int x, int y, int, void* param)
 {
-	//Point origin;//������������������������������������������������������������������������������������������������������������������������origin����������������������������������������������������
-
 	if (LBtnDown)
 	{
 		mouse_x = x;
@@ -23,7 +21,7 @@ void onMouse(int event, int x, int y, int, void* param)
 	}
 	if (event == CV_EVENT_LBUTTONDOWN)
 	{
-		LBtnDown = true; //����������������������������������������
+		LBtnDown = true; 
 	}
 	else if (event == CV_EVENT_LBUTTONUP)
 	{
@@ -72,6 +70,7 @@ int main()
 	int flag_writing = 0;
 	int flag_writevideo_src = 0;
 	int flag_writing_src = 0;
+	int check_count_thres = 5;
 
 	cv::VideoWriter video_writer;
 	cv::VideoWriter video_writer_src;
@@ -82,6 +81,7 @@ int main()
 	cv::createTrackbar("writevideo", "bar", &flag_writevideo, 1);
 	cv::createTrackbar("writevideo_src", "bar", &flag_writevideo_src, 1);
 	cv::createTrackbar("delay_ms", "bar", &delay_ms, 50);
+	cv::createTrackbar("check_count_thres", "bar", &check_count_thres, 10);
 
 #define USE_CAMERA 1
 
@@ -203,7 +203,7 @@ int main()
 
 		if (flag_LX_target == 1)
 		{
-			if (state_str[state_num] == SD_FLY_TARGET)
+			if (state_num == SD_FLY_TARGET)
 			{
 				check_count = 0;
 				have_target = false;
@@ -211,7 +211,7 @@ int main()
 				//continue;
 			}
 
-			if (state_str[state_num] == SD_CHECK_TARGET)
+			if (state_num == SD_CHECK_TARGET)
 			{
 				detectNumber(src, tess, result);
 				if (result.size() == 1)
@@ -227,7 +227,7 @@ int main()
 
 					check_character = result[0].number_[0];
 				}
-				if (check_count >= 10)
+				if (check_count >= check_count_thres)
 				{
 					have_target = true;
 					target_num = check_character - 48;
@@ -242,8 +242,13 @@ int main()
 				check_count = 0;
 			}
 		}
+		else
+		{
+			have_target = true;
+			target_num = char_num;
+		}
 
-		if ((have_target || flag_LX_target == 0) && (state_str[state_num] != SD_CHECK_TARGET))
+		if (state_num > 10)	//fly to workspace, detect, track, print and so on  
 		{
 			if (start_track)
 			{
@@ -290,7 +295,7 @@ int main()
 
 				for (size_t i = 0; i < result.size(); i++)
 				{
-					if (result[i].number_[0] == char_num + 48)
+					if (result[i].number_[0] == target_num + 48)
 					{
 						number_position_send.number_ = result[i].number_;
 						number_position_send.position_ = result[i].position_;
@@ -325,6 +330,7 @@ int main()
 		drawImage(src);
 
 		uartSent(UART_SENT_TYPE_CHARACTER);
+		uartSent(UART_SENT_TYPE_TARGET);
 		uartSent(UART_SENT_TYPE_MOUSE);
 
 		imshow("cap", src);

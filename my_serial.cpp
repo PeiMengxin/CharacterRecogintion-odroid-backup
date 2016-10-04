@@ -131,26 +131,10 @@ void Data_pre_character()
 	unsigned int _temp;
 	data_to_send[_cnt++] = 0xAA;
 	data_to_send[_cnt++] = 0xAF;
-	data_to_send[_cnt++] = 0x03;    //���������������������������
-	data_to_send[_cnt++] = 0;    //���������������������������
+	data_to_send[_cnt++] = 0x03;
+	data_to_send[_cnt++] = 0;
 
-	//data_to_send[_cnt++] = (int)number_position_send.size();
-//		for(size_t i=0;i<number_position_send.size();i++)
-//		{
-//			data_to_send[_cnt++] = number_position_send[i].number_;
-//			data_to_send[_cnt++] = int(number_position_send[i].position_.x) / 255;
-//			data_to_send[_cnt++] = int(number_position_send[i].position_.x) % 255;
-//			data_to_send[_cnt++] = int(number_position_send[i].position_.y);
-//		}
-
-	if(flag_LX_target)
-	{
-		char_to_recognition = target_num;
-	}
-	else
-	{
-		char_to_recognition = char_num;
-	}
+	char_to_recognition = target_num;
 
 	if (number_position_send.number_[0] != char_to_recognition + 48)
 	{
