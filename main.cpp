@@ -43,8 +43,7 @@ NumberPosition number_position_send;
 int main()
 {
 	init();
-	//my_serial.open();
-
+	
 	std::thread uart_read_thread(uartReadThread);
 
 	string imagename("NumberBlock-2.bmp");
