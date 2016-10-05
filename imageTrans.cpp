@@ -99,8 +99,8 @@ void drawImage(cv::Mat &image)
 void init()
 {
 	state_str.resize(30, "none");
-	state_str[SG_LOW_CHECK0] 		= 	"G_LC";
-	state_str[SG_MID_CHECK1]		=	"G_MC";
+    state_str[SG_LOW_CHECK] 		= 	"G_LC";
+    state_str[SG_MID_CHECK]		=	"G_MC";
 	state_str[SU_UP1] 				= 	"U_UP1";
 	state_str[SU_HOLD] 				= 	"U_HOLD";
 	state_str[SD_RETRY_UP] 			= 	"R_UP";
