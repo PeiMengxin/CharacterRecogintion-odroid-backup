@@ -165,7 +165,7 @@ int main()
 
 	//int count_frame = 0;
 	char temp_text[50];
-	char character_temp = 0;
+	int character_to_recog = 0;
 	Point pt_src_center(src.cols / 2, src.rows / 2);
 	int check_count = 0;
 	char check_character = 0;
@@ -240,14 +240,16 @@ int main()
 			{
 				check_count = 0;
 			}
+
+			character_to_recog = target_num;
 		}
 		else
 		{
 			have_target = true;
-			target_num = char_num;
+			character_to_recog = char_num;
 		}
 
-		if (state_num > 10)	//fly to workspace, detect, track, print and so on  
+		if ((flag_LX_target == 0)||(state_num > 10))	//fly to workspace, detect, track, print and so on
 		{
 			if (start_track)
 			{
@@ -294,8 +296,9 @@ int main()
 
 				for (size_t i = 0; i < result.size(); i++)
 				{
-					if (result[i].number_[0] == target_num + 48)
+					if (result[i].number_[0] == character_to_recog + 48)
 					{
+						cout<<"cc"<<endl;
 						number_position_send.number_ = result[i].number_;
 						number_position_send.position_ = result[i].position_;
 						number_position_send.boundRect = result[i].boundRect;

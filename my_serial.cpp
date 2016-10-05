@@ -134,7 +134,14 @@ void Data_pre_character()
 	data_to_send[_cnt++] = 0x03;
 	data_to_send[_cnt++] = 0;
 
-	char_to_recognition = target_num;
+	if(flag_LX_target==1)
+	{
+		char_to_recognition = target_num;
+	}
+	else
+	{
+		char_to_recognition = char_num;
+	}
 
 	if (number_position_send.number_[0] != char_to_recognition + 48)
 	{
