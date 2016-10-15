@@ -60,6 +60,11 @@ void uartReadThread()
 				temp |= data_buf[11];
 				Yaw = (float) temp / 10.0f;
 
+				for(size_t i=0;i<10;i++)
+				{
+					ignore_char[i] = data_buf[12+i];
+				}
+
 			}
 		}
 		if (isTerminal)

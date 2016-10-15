@@ -12,20 +12,20 @@ void getBlack(cv::Mat src, cv::Mat &dst, cv::Scalar blackUpperValue)
 	inRange(src, blackUpperValue, Scalar(255, 255, 255), dst);
 }
 
-/*
- *	×Ô¶¨ÒåÅÅÐòº¯Êý£¬¸ù¾Ýr.area()ÉýÐò
- */
-bool SortByRectAreaUp(const Rect &r1, const Rect &r2) //×¢Òâ£º±¾º¯ÊýµÄ²ÎÊýµÄÀàÐÍÒ»¶¨ÒªÓëvectorÖÐÔªËØµÄÀàÐÍÒ»ÖÂ
+
+bool SortByRectAreaUp(const Rect &r1, const Rect &r2)
 {
-	return r1.area() < r2.area(); //ÉýÐòÅÅÁÐ
+	return r1.area() < r2.area();
 }
 
-/*
- *	×Ô¶¨ÒåÅÅÐòº¯Êý£¬¸ù¾Ýr.area()½µÐò
- */
-bool SortByRectAreaDown(const Rect &r1, const Rect &r2) //×¢Òâ£º±¾º¯ÊýµÄ²ÎÊýµÄÀàÐÍÒ»¶¨ÒªÓëvectorÖÐÔªËØµÄÀàÐÍÒ»ÖÂ
+bool SortByRectAreaDown(const Rect &r1, const Rect &r2)
 {
-	return r1.area() > r2.area(); //½µÐòÅÅÁÐ
+	return r1.area() > r2.area();
+}
+
+bool SortByNumberUp(const NumberPosition &n1, const NumberPosition &n2)
+{
+	return n1.number_[0]<n2.number_[0];
 }
 
 void getCharCandRegions(const cv::Mat black, cv::Mat &charImg,
@@ -51,7 +51,7 @@ void getCharCandRegions(const cv::Mat black, cv::Mat &charImg,
 		boundRect[i] = boundingRect(Mat(contours_poly[i]));
 	}
 
-	//std::sort(boundRect.begin(), boundRect.end(), SortByRectAreaUp);
+	//std::sort(boundRect.begin(), boundRect.r1.area() > r2.area();end(), SortByRectAreaUp);
 	std::sort(boundRect.begin(), boundRect.end(), [&](Rect r1, Rect r2)
 	{	return r1.area() < r2.area();});
 
@@ -142,7 +142,7 @@ void detectRectangles(std::vector<cv::Mat> &thresImgv,
 				// check that the poligon has 4 points
 				if (approxCurve.size() == 4)
 				{
-					// and is convex
+					// and is convexr1.area() > r2.area();
 					if (isContourConvex(Mat(approxCurve)))
 					{
 						float minDist = 1e10;
@@ -556,7 +556,7 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess,
 		//cv::erode(img_character, img_character, element, Point(-1, -1), 3);
 
 		//img_character.setTo(255, mask);
-		imshow("img_character", img_character);
+		//imshow("img_character", img_character);
 
 		tess.SetImage(img_character.data, img_character.cols,
 				img_character.rows, 1, img_character.cols);
@@ -577,6 +577,8 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess,
 			result.push_back(np);
 		}
 	}
+
+	std::sort(result.begin(),result.end(), SortByNumberUp);
 }
 
 CharacterImg::~CharacterImg()

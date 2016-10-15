@@ -21,7 +21,7 @@ void onMouse(int event, int x, int y, int, void* param)
 	}
 	if (event == CV_EVENT_LBUTTONDOWN)
 	{
-		LBtnDown = true; 
+		LBtnDown = true;
 	}
 	else if (event == CV_EVENT_LBUTTONUP)
 	{
@@ -37,13 +37,14 @@ bool isTerminal = false;
 int delay_ms = 5;
 int flag_LX_target = 0;
 bool have_target = false;
+char ignore_char[10] = { 66 };
 
 NumberPosition number_position_send;
 
 int main()
 {
 	init();
-	
+
 	std::thread uart_read_thread(uartReadThread);
 
 	string imagename("NumberBlock-2.bmp");
@@ -69,7 +70,7 @@ int main()
 	int flag_writing = 0;
 	int flag_writevideo_src = 0;
 	int flag_writing_src = 0;
-	int check_count_thres = 5;
+	int check_count_thres = 2;
 
 	cv::VideoWriter video_writer;
 	cv::VideoWriter video_writer_src;
@@ -169,6 +170,7 @@ int main()
 	Point pt_src_center(src.cols / 2, src.rows / 2);
 	int check_count = 0;
 	char check_character = 0;
+	char check_character_temp = 0;
 
 	while (true)
 	{
@@ -207,30 +209,89 @@ int main()
 				check_count = 0;
 				have_target = false;
 				target_num = -1;
+				check_character = 0;
+				check_character_temp = 0;
 				//continue;
 			}
 
 			if (state_num == SD_CHECK_TARGET)
 			{
 				detectNumber(src, tess, result);
-				if (result.size() == 1)
+				bool checked = false;
+				bool ignored = false;
+
+				for (size_t i = 0; i < result.size(); i++)
 				{
-					if (check_character == result[0].number_[0])
+					ignored = false;
+					for (size_t j = 0; j < 10; j++)
 					{
-						check_count++;
+						if (result[i].number_[0] == ignore_char[j] + 48)
+						{
+							ignored = true;
+							break;
+						}
 					}
-					else
+					if (ignored)
 					{
-						check_count = 0;
+						putText(src, result[i].number_, result[i].position_,
+								FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0, 255, 0), 2);
+						continue;
 					}
 
-					check_character = result[0].number_[0];
+					putText(src, result[i].number_, result[i].position_,
+							FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 0, 0), 2);
+					if (check_character == result[i].number_[0])
+					{
+						check_character = result[i].number_[0];
+						checked = true;
+					}
 				}
+				if (checked)
+				{
+					check_count++;
+				}
+				else
+				{
+					check_count = 0;
+
+					for (size_t i = 0; i < result.size(); i++)
+					{
+						ignored = false;
+						for (size_t j = 0; j < 10; j++)
+						{
+							if (result[i].number_[0] == ignore_char[j] + 48)
+							{
+								ignored = true;
+								break;
+							}
+						}
+						if(!ignored)
+						{
+							check_character = result[i].number_[0];
+							break;
+						}
+					}
+
+				}
+//				if (result.size() > 0)
+//				{
+//					if (check_character == result[0].number_[0])
+//					{
+//						check_count++;
+//					}
+//					else
+//					{
+//						check_count = 0;
+//					}
+//
+//					check_character = result[0].number_[0];
+//				}
 				if (check_count >= check_count_thres)
 				{
 					have_target = true;
 					target_num = check_character - 48;
 				}
+				cout << "send:" << target_num << endl;
 
 				uartSent(UART_SENT_TYPE_TARGET);
 
@@ -249,7 +310,7 @@ int main()
 			character_to_recog = char_num;
 		}
 
-		if ((flag_LX_target == 0)||(state_num > 10))	//fly to workspace, detect, track, print and so on
+		if ((flag_LX_target == 0) || (state_num > 10)) //fly to workspace, detect, track, print and so on
 		{
 			if (start_track)
 			{
@@ -298,7 +359,6 @@ int main()
 				{
 					if (result[i].number_[0] == character_to_recog + 48)
 					{
-						cout<<"cc"<<endl;
 						number_position_send.number_ = result[i].number_;
 						number_position_send.position_ = result[i].position_;
 						number_position_send.boundRect = result[i].boundRect;

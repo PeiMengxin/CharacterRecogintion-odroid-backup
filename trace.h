@@ -38,5 +38,6 @@ extern std::ifstream video_num_read;
 extern int flag_LX_target;
 extern bool have_target;
 extern std::vector<std::string> state_str;
+extern char ignore_char[10];
 
 #endif /* TRACE_H_ */

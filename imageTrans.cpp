@@ -100,13 +100,14 @@ void init()
 {
 	state_str.resize(30, "none");
     state_str[SG_LOW_CHECK] 		= 	"G_LC";
-    state_str[SG_MID_CHECK]		=	"G_MC";
+    state_str[SG_MID_CHECK]			=	"G_MC";
 	state_str[SU_UP1] 				= 	"U_UP1";
 	state_str[SU_HOLD] 				= 	"U_HOLD";
 	state_str[SD_RETRY_UP] 			= 	"R_UP";
 	state_str[SD_RETRY_UP_HOLD] 	= 	"R_HOLD";
-	state_str[SD_CHECK_TARGET] 		= 	"CHECK_TARGET";
+	state_str[SD_CHECK_TARGET] 		= 	"CHK_TARGET";
 	state_str[SD_FLY_TARGET] 		= 	"FLY_TARGET";
+	state_str[TO_START] 			= 	"TO_START";
 
 	state_str[SD_HOLD] 				= 	"D_HOLD";
 	state_str[SD_MISS_SEARCH] 		= 	"D_MISS";
@@ -116,11 +117,12 @@ void init()
 	state_str[SD_CIRCLE_HOLD] 		= 	"D_CHOLD";
 	state_str[SD_CIRCLE_MID_DOWN] 	= 	"D_CMD";
 	state_str[SD_CHECK_G] 			= 	"D_GC";
-	state_str[SD_SHUT_DOWN] 		= 	"D_SHUT";
+	state_str[SD_SHUT_DOWN] 		= 	"SHUT_DOWN";
 	state_str[SD_SAFE] 				= 	"D_SAFE";
 	state_str[HOLD_BACK] 			= 	"HOLD_BACK";
 	state_str[BREAK] 				= 	"BREAK";
 	state_str[SHUT] 				= 	"SHUT";
+	state_str[GO_HOME] 				= 	"GO_HOME";
 }
 
 int video_num = 0;

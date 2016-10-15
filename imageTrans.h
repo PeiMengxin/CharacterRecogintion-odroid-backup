@@ -23,8 +23,9 @@
 #define SU_HOLD				3	//"U_HOLD"
 #define SD_RETRY_UP			4	//"R_UP"
 #define SD_RETRY_UP_HOLD	5	//"R_HOLD"
-#define SD_CHECK_TARGET		6	//"CHECK_TARGET"
-#define SD_FLY_TARGET		7	//"FLY_TARGET"
+#define SD_FLY_TARGET		6	//"FLY_TARGET"
+#define SD_CHECK_TARGET		7	//"CHK_TARGET"
+#define TO_START			8	//"TO_START"
 
 #define SD_HOLD				13	//"D_HOLD"
 #define SD_MISS_SEARCH		14	//"D_MISS"
@@ -39,6 +40,7 @@
 #define HOLD_BACK			23	//"HOLD_BACK"
 #define BREAK				24	//"BREAK"
 #define SHUT				25	//"SHUT"
+#define GO_HOME				26	//"GO_HOME"
 
 cv::Rect dlibRect2CVRect(dlib::rectangle r);
 dlib::rectangle getInitPosition(cv::Rect r);
