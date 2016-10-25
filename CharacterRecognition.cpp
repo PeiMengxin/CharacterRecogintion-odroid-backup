@@ -1,8 +1,12 @@
 #include "CharacterRecognition.h"
 #include <omp.h>
+#include "trace.h"
+#include "imageTrans.h"
 
 using namespace std;
 using namespace cv;
+
+Mat number_template[10];
 
 void getBlack(cv::Mat src, cv::Mat &dst, cv::Scalar blackUpperValue)
 {
@@ -12,6 +16,13 @@ void getBlack(cv::Mat src, cv::Mat &dst, cv::Scalar blackUpperValue)
 	inRange(src, blackUpperValue, Scalar(255, 255, 255), dst);
 }
 
+void getRed(cv::Mat src, cv::Mat &dst, cv::Scalar redUpperValue)
+{
+	dst.create(src.size(), CV_8UC1);
+	dst.setTo(Scalar(0));
+
+	inRange(src, redUpperValue, Scalar(150, 150, 255), dst);
+}
 
 bool SortByRectAreaUp(const Rect &r1, const Rect &r2)
 {
@@ -118,7 +129,7 @@ void detectRectangles(std::vector<cv::Mat> &thresImgv,
 					* 4);
 
 #pragma omp parallel for
-	for (int img_idx = 0; img_idx < thresImgv.size(); img_idx++)
+	for (size_t img_idx = 0; img_idx < thresImgv.size(); img_idx++)
 	{
 		std::vector<cv::Vec4i> hierarchy2;
 		std::vector<std::vector<cv::Point> > contours2;
@@ -483,6 +494,83 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess,
 		std::vector<NumberPosition> &result)
 {
 	result.clear();
+	int g_nStructElementSize = 1;
+
+	Mat element = getStructuringElement(MORPH_RECT,
+			Size(2 * g_nStructElementSize + 1, 7 * g_nStructElementSize + 1),
+			Point(g_nStructElementSize, 3 * g_nStructElementSize));
+
+	Mat hsv;
+	Mat hsv_red;
+	Point moment_center(0, 0);
+	Rect moment_rect(80, 60, 160, 120);
+	Mat img_black;
+	Scalar redUpValue(0, 0, 200);
+
+	if(debug_screen == 1)
+	{
+		state_num = SD_CHECK_TARGET;
+	}
+	if((debug_screen == 0)&&(flag_LX_target==0))
+	{
+		state_num = 0;
+	}
+
+	if (state_num == SD_CHECK_TARGET)
+	{
+		//cout << "state_num == SD_CHECK_TARGET" << endl;
+		cv::cvtColor(src, hsv, CV_BGR2HSV);
+		inRange(hsv, Scalar(0, 0, 200), Scalar(255, 30, 255), hsv_red);
+		cv::Moments moments;
+		moments = cv::moments(hsv_red, true);
+		moment_center.x = moments.m10 / moments.m00;
+		moment_center.y = moments.m01 / moments.m00;
+
+		if (moment_rect.contains(moment_center))
+		{
+			morphologyEx(hsv_red, hsv_red, MORPH_CLOSE, element, Point(-1, -1),
+					2);
+			cv::resize(hsv_red, hsv_red, Size(64, 48));
+			//cv::imshow("hsv_red", hsv_red);
+			tess.SetImage(hsv_red.data, hsv_red.cols, hsv_red.rows, 1,
+					hsv_red.cols);
+		}
+		else
+		{
+			getRed(src, img_black, redUpValue);
+			morphologyEx(img_black, img_black, MORPH_CLOSE, element,
+					Point(-1, -1), 2);
+			moments = cv::moments(img_black, true);
+			moment_center.x = moments.m10 / moments.m00;
+			moment_center.y = moments.m01 / moments.m00;
+			if (moment_rect.contains(moment_center))
+			{
+				resize(img_black, img_black, Size(64, 48));
+				tess.SetImage(img_black.data, img_black.cols, img_black.rows, 1,
+						img_black.cols);
+			}
+			else
+			{
+				return;
+			}
+
+		}
+
+
+		char* UTF8Text1 = tess.GetUTF8Text();
+
+		string tess_result_text1(UTF8Text1);
+
+		if (isNumberChar_checkScreen(tess_result_text1[0]))
+		{
+			cout<<tess_result_text1[0]<<endl;
+			NumberPosition np1;
+			np1.number_ = tess_result_text1[0];
+			np1.position_ = cv::Point(160,40);
+			result.push_back(np1);
+		}
+		return;
+	}
 
 	Mat gray;
 	vector<vector<Point>> PolyCanditates;
@@ -520,12 +608,7 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess,
 
 	Mat mask(mask_size, CV_8UC1, Scalar::all(255));
 	mask(r).setTo(Scalar::all(0));
-	int g_nStructElementSize = 1; //ç»æåç´ (åæ ¸ç©éµ)çå°ºå¯?
 
-	//è·åèªå®ä¹æ ¸
-	Mat element = getStructuringElement(MORPH_RECT,
-			Size(2 * g_nStructElementSize + 1, 7 * g_nStructElementSize + 1),
-			Point(g_nStructElementSize, 3 * g_nStructElementSize));
 	for (size_t i = 0; i < characterImgV.size(); i++)
 	{
 		Mat img_character = characterImgV[i].img_.clone();
@@ -558,17 +641,28 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess,
 		//img_character.setTo(255, mask);
 		//imshow("img_character", img_character);
 
+		resize(img_character, img_character, Size(30, 40));
+#define USE_TEMPLATE 0
+		char char1 = 0;
+		char char2 = 0;
+#if USE_TEMPLATE
+
+		char1 = getNumByTemplate(img_character);
+		cout<<char1<<endl;
+#endif
 		tess.SetImage(img_character.data, img_character.cols,
 				img_character.rows, 1, img_character.cols);
 
 		char* UTF8Text = tess.GetUTF8Text();
 
 		string tess_result_text(UTF8Text);
+		//cout<<tess_result_text[0]<<endl;
 
 		delete[] UTF8Text;
 
 		if (isNumberChar(tess_result_text[0]))
 		{
+			char2 = tess_result_text[0];
 			NumberPosition np;
 			np.number_ = tess_result_text[0];
 			np.position_ = getCharRectCenter(characterImgV[i]);
@@ -576,9 +670,66 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess,
 
 			result.push_back(np);
 		}
+
+#if USE_TEMPLATE
+		if(char1 == char2)
+		{
+
+		}
+#endif
+
+
 	}
 
 	std::sort(result.begin(),result.end(), SortByNumberUp);
+}
+
+bool isNumberChar(char &c)
+{
+	if (c == 'A')
+		c = '4';
+	if (c == 'o'||c=='O'||c =='I')
+		c = '0';
+	if ((c>='0')&&(c<='9'))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool isNumberChar_checkScreen(char &c)
+{
+	if (c == 'A')
+		c = '4';
+	if ((c >= '0') && (c <= '9'))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+char getNumByTemplate(cv::Mat char_img)
+{
+	Scalar scores[10] = { 0 };
+	Mat diff;
+	Mat diff_pow;
+	int min_idx = -1;
+	double min_scores(2000000);
+	for (size_t i = 0; i < 10; i++)
+	{
+		diff = char_img - number_template[i];
+		cv::pow(diff, 2, diff_pow);
+		scores[i] = sum(diff_pow);
+		if (scores[i].val[0]<min_scores)
+		{
+			min_scores = scores[i].val[0];
+			min_idx = i;
+		}
+	}
+	cout << "minscore:" << min_scores << endl;
+	return min_idx + 48;
 }
 
 CharacterImg::~CharacterImg()

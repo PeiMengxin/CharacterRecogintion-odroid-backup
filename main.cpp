@@ -9,6 +9,9 @@ using namespace std;
 using namespace cv;
 
 bool LBtnDown = false;
+int debug_screen=0;
+int flag_LX_target = 1;
+extern Mat number_template[10];
 
 void onMouse(int event, int x, int y, int, void* param)
 {
@@ -35,15 +38,31 @@ int target_num = -1;
 int state_num = 0;
 bool isTerminal = false;
 int delay_ms = 5;
-int flag_LX_target = 0;
 bool have_target = false;
-char ignore_char[10] = { 66 };
+char ignore_char[10] = { 66, 66, 66, 66, 66, 66, 66, 66, 66, 66 };
+int pre_check_count[10] = {0,0,0,0,0,0,0,0,0,0};
 
 NumberPosition number_position_send;
 
 int main()
 {
 	init();
+
+	number_template[0] = imread("/home/odroid/workspace/characterRecognition/src/tmp-0.bmp", 0);
+	number_template[1] = imread("/home/odroid/workspace/characterRecognition/src/tmp-1.bmp", 0);
+	number_template[2] = imread("/home/odroid/workspace/characterRecognition/src/tmp-2.bmp", 0);
+	number_template[3] = imread("/home/odroid/workspace/characterRecognition/src/tmp-3.bmp", 0);
+	number_template[4] = imread("/home/odroid/workspace/characterRecognition/src/tmp-4.bmp", 0);
+	number_template[5] = imread("/home/odroid/workspace/characterRecognition/src/tmp-5.bmp", 0);
+	number_template[6] = imread("/home/odroid/workspace/characterRecognition/src/tmp-6.bmp", 0);
+	number_template[7] = imread("/home/odroid/workspace/characterRecognition/src/tmp-7.bmp", 0);
+	number_template[8] = imread("/home/odroid/workspace/characterRecognition/src/tmp-8.bmp", 0);
+	number_template[9] = imread("/home/odroid/workspace/characterRecognition/src/tmp-9.bmp", 0);
+
+	for(size_t i = 0;i<10;i++)
+	{
+		cv::resize(number_template[i],number_template[i], cv::Size(30,40));
+	}
 
 	std::thread uart_read_thread(uartReadThread);
 
@@ -60,17 +79,19 @@ int main()
 	ofstream log_out;
 	log_out.open("log.txt");
 
-	string videoName("/home/odroid/workspace/characterRecognition/video/5.avi");
+	string videoName("/home/odroid/workspace/characterRecognition/video/48.avi");
 
 	dlib::correlation_tracker tracker;
 
 	cv::namedWindow("bar");
 	int psr_threshold = 20;
-	int flag_writevideo = 0;
+	int flag_writevideo = 1;
 	int flag_writing = 0;
-	int flag_writevideo_src = 0;
+	int flag_writevideo_src = 1;
 	int flag_writing_src = 0;
-	int check_count_thres = 2;
+	int check_count_thres = 3;
+	int pre_check_count_thres = 8;
+
 
 	cv::VideoWriter video_writer;
 	cv::VideoWriter video_writer_src;
@@ -82,8 +103,11 @@ int main()
 	cv::createTrackbar("writevideo_src", "bar", &flag_writevideo_src, 1);
 	cv::createTrackbar("delay_ms", "bar", &delay_ms, 50);
 	cv::createTrackbar("check_count_thres", "bar", &check_count_thres, 10);
+	cv::createTrackbar("pre_check_count_thres", "bar", &pre_check_count_thres, 20);
+	cv::createTrackbar("debug_screen", "bar", &debug_screen, 1);
 
 #define USE_CAMERA 1
+#define USE_SPACE 0
 
 #if USE_CAMERA
 	cap.open(0);
@@ -97,6 +121,7 @@ int main()
 
 #else
 	cap.open(videoName);
+
 	waitKey(2000);
 
 #endif
@@ -109,7 +134,7 @@ int main()
 	setMouseCallback("cap", onMouse, NULL); //mouse interface
 
 #if USE_CAMERA
-
+#if USE_SPACE
 	while (true)
 	{
 		cap >> src_temp;
@@ -138,6 +163,7 @@ int main()
 			return 0;
 		}
 	}
+#endif
 
 #endif
 
@@ -150,6 +176,7 @@ int main()
 	//TickMeter tm;
 
 	int frame = 0;
+	int frame_check = 0;
 
 	Size _size(300, 400);
 
@@ -171,6 +198,7 @@ int main()
 	int check_count = 0;
 	char check_character = 0;
 	char check_character_temp = 0;
+	int nullcount = 0;
 
 	while (true)
 	{
@@ -183,6 +211,7 @@ int main()
 		src.copyTo(src_save);
 #else
 		cap >> src;
+		//cap.set(CV_CAP_PROP_POS_FRAMES,5000);
 #endif
 
 		if (LBtnDown)
@@ -199,6 +228,11 @@ int main()
 		if (src.data == NULL)
 		{
 			cout << "src.data = NULL...try again..." << endl;
+			nullcount++;
+			if(nullcount>10)
+			{
+				return -1;
+			}
 			continue;
 		}
 
@@ -211,11 +245,28 @@ int main()
 				target_num = -1;
 				check_character = 0;
 				check_character_temp = 0;
+				for (size_t i = 0; i < 10; i++)
+				{
+					pre_check_count[i] = 0;
+				}
 				//continue;
 			}
-
+			//state_num == SD_CHECK_TARGET;
 			if (state_num == SD_CHECK_TARGET)
 			{
+				frame_check++;
+//				for (size_t i = 0; i < 10; i++)
+//				{
+//					cout << pre_check_count[i] << "  ";
+//				}
+//				cout<<frame_check<<endl;
+				if(frame_check%200==0)
+				{
+					for (size_t i = 0; i < 10; i++)
+					{
+						pre_check_count[i] = 0;
+					}
+				}
 				detectNumber(src, tess, result);
 				bool checked = false;
 				bool ignored = false;
@@ -240,6 +291,9 @@ int main()
 
 					putText(src, result[i].number_, result[i].position_,
 							FONT_HERSHEY_SIMPLEX, 1, CV_RGB(255, 0, 0), 2);
+
+					pre_check_count[result[i].number_[0]-48]++;
+
 					if (check_character == result[i].number_[0])
 					{
 						check_character = result[i].number_[0];
@@ -291,6 +345,16 @@ int main()
 					have_target = true;
 					target_num = check_character - 48;
 				}
+				for (size_t target_index = 0; target_index < 10; target_index++)
+				{
+					if(pre_check_count[target_index] >=pre_check_count_thres)
+					{
+						have_target = true;
+						target_num = target_index;
+						break;
+					}
+				}
+
 				cout << "send:" << target_num << endl;
 
 				uartSent(UART_SENT_TYPE_TARGET);
@@ -300,6 +364,10 @@ int main()
 			else
 			{
 				check_count = 0;
+				for (size_t i = 0; i < 10; i++)
+				{
+					pre_check_count[i] = 0;
+				}
 			}
 
 			character_to_recog = target_num;
@@ -357,6 +425,7 @@ int main()
 
 				for (size_t i = 0; i < result.size(); i++)
 				{
+					//cout<<result[i].number_<<endl;
 					if (result[i].number_[0] == character_to_recog + 48)
 					{
 						number_position_send.number_ = result[i].number_;

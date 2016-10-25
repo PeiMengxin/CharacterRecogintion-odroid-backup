@@ -25,6 +25,11 @@ void uartReadThread()
 	int16_t temp = 0;
 	while (true)
 	{
+		if (flag_LX_target==0)
+		{
+			usleep(1000 * delay_ms);
+			continue;
+		}
 		sum = 0;
 		data_length = my_serial.available();
 		//cout << "data_length:" << data_length << endl;

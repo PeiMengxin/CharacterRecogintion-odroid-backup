@@ -80,7 +80,7 @@ private:
 };
 
 void getBlack(cv::Mat src, cv::Mat &dst, cv::Scalar blackUpperValue);	// get black area
-
+void getRed(cv::Mat src, cv::Mat &dst, cv::Scalar redUpperValue);
 void getCharCandRegions(const cv::Mat black, cv::Mat &charImg, cv::Rect &charRect);	// get character candidate regions
 
 void detectRectangles(cv::Mat &thresImg, std::vector< std::vector< cv::Point > > &outPolyCanditates);
@@ -97,7 +97,9 @@ void detectNumber(cv::Mat src, tesseract::TessBaseAPI &tess, std::vector<NumberP
 
 int perimeter(std::vector< cv::Point > &a);
 
-inline bool isNumberChar(char c){ return ((c >= '0') && (c <= '9')); }
+bool isNumberChar(char &c);
+bool isNumberChar_checkScreen(char &c);
+char getNumByTemplate(cv::Mat char_img);
 
 
 template < typename T > void joinVectors(std::vector< std::vector< T > > &vv, std::vector< T > &v, bool clearv = false) 

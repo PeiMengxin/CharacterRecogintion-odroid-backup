@@ -80,7 +80,7 @@ void drawImage(cv::Mat &image)
 			CV_RGB(255, 0, 0), 2);
 	sprintf(temp_text, "  %d", state_num);
 	putText(image, state_str[state_num] + temp_text, Point(160, 20),
-	CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(255, 0, 0), 1, 8);
+	CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(0, 255, 0), 1, 8);
 
 	putText(image, number_position_send.number_, Point(10, 140),
 	CV_FONT_HERSHEY_TRIPLEX, 0.6, CV_RGB(255, 0, 0), 1, 8);
